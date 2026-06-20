@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vasanth Kumar | Data Ops & Human Capital</title>
+    
+    <!-- Fonts: Orbitron (Headers), Rajdhani (Body), Share Tech Mono (Data/HUD) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Icons and Charts -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#050816',
+                            bg2: '#0A0F1F',
+                            cyan: '#00F5FF',
+                            purple: '#B026FF',
+                            pink: '#FF2D95',
+                            lime: '#00FF88',
+                            gray: '#111827'
+                        }
+                    },
+                    fontFamily: {
+                        header: ['Orbitron', 'sans-serif'],
+                        body: ['Rajdhani', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --cyan: #00F5FF;
+            --purple: #B026FF;
+            --pink: #FF2D95;
+            --lime: #00FF88;
+            --bg-dark: #050816;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            overflow-x: hidden;
+            cursor: none; /* Custom cursor */
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0F1F;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(to right, rgba(0, 245, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 245, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -2;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            animation: gridMove 20s linear infinite;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .glass-panel {
+            background: rgba(10, 15, 31, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 245, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            opacity: 0.5;
+        }
+
+        .neon-text-cyan { text-shadow: 0 0 5px var(--cyan), 0 0 15px var(--cyan), 0 0 30px var(--cyan); }
+        .neon-text-pink { text-shadow: 0 0 5px var(--pink), 0 0 15px var(--pink), 0 0 30px var(--pink); }
+        .neon-border-cyan { box-shadow: 0 0 10px var(--cyan), inset 0 0 10px var(--cyan); border-color: var(--cyan); }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+        .glitch-effect:hover {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: var(--pink);
+            text-shadow: 2px 0 var(--cyan), -2px 0 var(--lime);
+        }
+
+        /* Custom Cursor */
+        #cursor-dot, #cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        #cursor-dot { width: 8px; height: 8px; background-color: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+        #cursor-outline { width: 40px; height: 40px; border: 1px solid var(--purple); box-shadow: inset 0 0 10px rgba(176, 38, 255, 0.5); transition: width 0.2s, height 0.2s; }
+
+        .cyber-btn {
+            position: relative;
+            background: transparent;
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: all 0.3s ease;
+        }
+        .cyber-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+        .cyber-btn:hover {
+            background: rgba(0, 245, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+            text-shadow: 0 0 8px var(--cyan);
+        }
+        .cyber-btn:hover::before { left: 100%; }
+
+        /* Tech Nodes */
+        .tech-node {
+            transition: all 0.3s ease;
+        }
+        .tech-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--purple);
+            border-color: var(--purple);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyber-pink selection:text-white">
+
+    <!-- Ambient UI Overlays -->
+    <div class="cyber-grid"></div>
+    <div class="scanlines"></div>
+    <canvas id="particle-canvas" class="fixed top-0 left-0 w-full h-full -z-10 opacity-60"></canvas>
+    
+    <!-- Custom Cursor -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+
+    <!-- Navigation HUD -->
+    <nav class="fixed top-0 w-full z-40 bg-cyber-bg/80 backdrop-blur-md border-b border-cyber-cyan/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0 font-header font-bold text-xl tracking-wider text-white">
+                    DATA.<span class="text-cyber-cyan neon-text-cyan">OPS</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8 font-mono text-sm">
+                        <a href="#home" class="hover:text-cyber-cyan transition-colors">01. INIT</a>
+                        <a href="#about" class="hover:text-cyber-cyan transition-colors">02. DIRECTIVE</a>
+                        <a href="#skills" class="hover:text-cyber-cyan transition-colors">03. MATRIX</a>
+                        <a href="#experience" class="hover:text-cyber-cyan transition-colors">04. LOGS</a>
+                        <a href="#contact" class="hover:text-cyber-pink transition-colors">05. COMM_LINK</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative z-10 pt-16">
+        
+        <!-- Section 01: Hero -->
+        <section id="home" class="min-h-screen flex items-center justify-center relative px-4 overflow-hidden">
+            <!-- Decorative HUD Elements -->
+            <div class="absolute top-32 left-10 font-mono text-xs text-cyber-cyan/50 hidden lg:block">
+                SYS.MONITORING...<br>
+                CPU: 42% | RAM: 88%<br>
+                NET: DATA_PIPELINE_ACTIVE<br>
+                LOC: HYDERABAD_HUB
+            </div>
+            
+            <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <div class="space-y-6">
+                    <div class="inline-block px-3 py-1 border border-cyber-lime/30 bg-cyber-lime/10 text-cyber-lime font-mono text-xs rounded-sm mb-4">
+                        <i class="ph ph-circle-notch animate-spin inline-block mr-2"></i> USER AUTHORIZED
+                    </div>
+                    <h1 class="font-header text-5xl md:text-7xl font-bold uppercase tracking-tighter leading-tight">
+                        <span class="block text-gray-400 text-2xl md:text-3xl mb-2 font-mono glitch-effect">IDENTITY:</span>
+                        THOTAKURA <br>
+                        <span class="text-cyber-cyan neon-text-cyan">VASANTH KUMAR</span>
+                    </h1>
+                    
+                    <div class="font-mono text-xl md:text-2xl h-8 text-cyber-purple">
+                        <span id="typewriter"></span><span class="animate-pulse">_</span>
+                    </div>
+
+                    <p class="font-body text-gray-400 text-lg max-w-lg mt-4 leading-relaxed">
+                        Optimizing workflows through advanced healthcare data classification, ISL operations, and human capital analytics. Upgrading organizational efficiency for the next era.
+                    </p>
+
+                    <div class="flex flex-wrap gap-4 pt-6 font-header">
+                        <a href="#experience" class="cyber-btn px-8 py-3 text-sm font-bold bg-cyber-cyan/10 hover:text-white">
+                            Access Logs
+                        </a>
+                        <a href="#contact" class="cyber-btn px-8 py-3 text-sm font-bold border-cyber-pink text-cyber-pink hover:bg-cyber-pink/10 hover:text-white">
+                            Establish Link
+                        </a>
+                    </div>
+                </div>
+
+                <div class="relative flex justify-center items-center h-[400px] lg:h-[500px]">
+                    <!-- Holo Ring Background -->
+                    <div class="absolute inset-0 border-2 border-cyber-cyan/20 rounded-full animate-[spin_10s_linear_infinite] scale-75"></div>
+                    <div class="absolute inset-0 border border-cyber-purple/40 rounded-full animate-[spin_15s_linear_infinite_reverse] scale-90 border-dashed"></div>
+                    
+                    <!-- Avatar Panel -->
+                    <div class="relative z-10 glass-panel p-2 w-64 h-80 flex items-center justify-center animate-float border-t-cyber-cyan border-b-cyber-pink" style="clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);">
+                        <div class="absolute inset-0 bg-gradient-to-b from-cyber-cyan/10 to-cyber-pink/10"></div>
+                        <!-- Placeholder for photo, designed as a digital scan -->
+                        <div class="text-center font-mono opacity-60">
+                            <i class="ph ph-user-focus text-6xl text-cyber-cyan mb-2"></i>
+                            <div class="text-xs text-cyber-cyan mb-1">SCANNING BIOMETRICS...</div>
+                            <div class="w-full bg-gray-800 h-1 mt-2 overflow-hidden">
+                                <div class="bg-cyber-cyan h-full w-1/2 animate-[pulse_1s_ease-in-out_infinite]"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Corner HUDs -->
+                        <div class="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-cyber-cyan"></div>
+                        <div class="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-cyber-pink"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 02: Directive (About) -->
+        <section id="about" class="py-24 relative px-4 border-t border-cyber-cyan/10 bg-gradient-to-b from-cyber-bg to-cyber-bg2">
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-12 flex items-center gap-4">
+                    <div class="text-cyber-cyan font-mono text-2xl">02.</div>
+                    <h2 class="font-header text-4xl font-bold uppercase tracking-wider text-white">Mission <span class="text-cyber-purple">Directive</span></h2>
+                    <div class="flex-grow h-px bg-gradient-to-r from-cyber-purple/50 to-transparent"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2 glass-panel p-8 rounded-lg relative group">
+                        <div class="absolute top-0 right-0 p-4 font-mono text-cyber-cyan/30 text-xs">DOC_REF: SUMMARY_7A</div>
+                        <p class="font-body text-lg text-gray-300 leading-relaxed mb-6">
+                            Dedicated operations professional specializing in Healthcare Data Indexing, Splitting, and Labeling (ISL) workflows. With a foundation calibrated in Business Administration, my architecture is built on driving organizational growth, ensuring quality compliance, and optimizing complex data processes.
+                        </p>
+                        <p class="font-body text-lg text-gray-300 leading-relaxed">
+                            I operate as a collaborative team player within any structure, leveraging strong analytical and communication skills to adapt to new environments. My primary objective: to deliver flawlessly synthesized results and propel institutional excellence through continuous learning and a commitment to quality.
+                        </p>
+                        
+                        <div class="mt-8 flex gap-6 border-t border-gray-800 pt-6">
+                            <div class="text-center">
+                                <div class="font-header text-3xl text-cyber-cyan mb-1">3+</div>
+                                <div class="font-mono text-xs text-gray-500 uppercase">Years Active</div>
+                            </div>
+                            <div class="text-center border-l border-gray-800 pl-6">
+                                <div class="font-header text-3xl text-cyber-pink mb-1">100%</div>
+                                <div class="font-mono text-xs text-gray-500 uppercase">Quality Compliance</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Attributes Radar/Stats -->
+                    <div class="glass-panel p-6 rounded-lg flex flex-col justify-center border-t-2 border-t-cyber-lime">
+                        <h3 class="font-mono text-sm text-cyber-lime mb-6 uppercase tracking-widest"><i class="ph ph-cpu mr-2"></i>Core Processing Strengths</h3>
+                        
+                        <div class="space-y-4 font-mono text-sm">
+                            <div>
+                                <div class="flex justify-between mb-1"><span>Analytical Processing</span> <span class="text-cyber-cyan">95%</span></div>
+                                <div class="w-full bg-gray-800 rounded-full h-1"><div class="bg-cyber-cyan h-1 rounded-full" style="width: 95%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1"><span>Team Synchronization</span> <span class="text-cyber-purple">90%</span></div>
+                                <div class="w-full bg-gray-800 rounded-full h-1"><div class="bg-cyber-purple h-1 rounded-full" style="width: 90%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1"><span>Data Classification</span> <span class="text-cyber-pink">98%</span></div>
+                                <div class="w-full bg-gray-800 rounded-full h-1"><div class="bg-cyber-pink h-1 rounded-full" style="width: 98%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1"><span>System Adaptability</span> <span class="text-cyber-lime">88%</span></div>
+                                <div class="w-full bg-gray-800 rounded-full h-1"><div class="bg-cyber-lime h-1 rounded-full" style="width: 88%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 03: Skills Matrix -->
+        <section id="skills" class="py-24 relative px-4 border-t border-cyber-purple/10">
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-12 flex items-center gap-4 flex-row-reverse">
+                    <div class="text-cyber-purple font-mono text-2xl">03.</div>
+                    <h2 class="font-header text-4xl font-bold uppercase tracking-wider text-white">Capability <span class="text-cyber-cyan">Matrix</span></h2>
+                    <div class="flex-grow h-px bg-gradient-to-l from-cyber-cyan/50 to-transparent"></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <!-- Radar Chart Container -->
+                    <div class="glass-panel p-6 rounded-2xl relative">
+                        <div class="absolute inset-0 bg-cyber-bg/50 rounded-2xl z-0"></div>
+                        <div class="relative z-10">
+                            <canvas id="skillsRadar"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tech Nodes -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="tech-node glass-panel p-4 border border-gray-700 hover:border-cyber-cyan rounded group cursor-none">
+                            <i class="ph ph-microsoft-excel text-3xl text-gray-500 group-hover:text-cyber-cyan transition-colors mb-2"></i>
+                            <h4 class="font-header font-bold text-lg mb-1">MS Suite Sync</h4>
+                            <p class="font-mono text-xs text-gray-400">Advanced Word, Excel & PPT data manipulation protocols.</p>
+                        </div>
+                        
+                        <div class="tech-node glass-panel p-4 border border-gray-700 hover:border-cyber-purple rounded group cursor-none">
+                            <i class="ph ph-users-three text-3xl text-gray-500 group-hover:text-cyber-purple transition-colors mb-2"></i>
+                            <h4 class="font-header font-bold text-lg mb-1">HR Architectures</h4>
+                            <p class="font-mono text-xs text-gray-400">Deep integration of policies, employee welfare & HR algorithms.</p>
+                        </div>
+
+                        <div class="tech-node glass-panel p-4 border border-gray-700 hover:border-cyber-pink rounded group cursor-none">
+                            <i class="ph ph-magnifying-glass-plus text-3xl text-gray-500 group-hover:text-cyber-pink transition-colors mb-2"></i>
+                            <h4 class="font-header font-bold text-lg mb-1">ISL Operations</h4>
+                            <p class="font-mono text-xs text-gray-400">Precision Indexing, Splitting, and Labeling of complex data.</p>
+                        </div>
+
+                        <div class="tech-node glass-panel p-4 border border-gray-700 hover:border-cyber-lime rounded group cursor-none">
+                            <i class="ph ph-strategy text-3xl text-gray-500 group-hover:text-cyber-lime transition-colors mb-2"></i>
+                            <h4 class="font-header font-bold text-lg mb-1">Time Synthesis</h4>
+                            <p class="font-mono text-xs text-gray-400">Optimized task prioritization and timeline management.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 04: Experience Logs -->
+        <section id="experience" class="py-24 relative px-4 border-t border-cyber-pink/10 bg-gradient-to-b from-cyber-bg2 to-cyber-bg">
+            <div class="max-w-4xl mx-auto">
+                <div class="mb-16 text-center">
+                    <h2 class="font-header text-4xl font-bold uppercase tracking-wider text-white mb-2">Operation <span class="text-cyber-pink">Logs</span></h2>
+                    <p class="font-mono text-cyber-cyan/70 text-sm">ARCHIVE: SECURE // LOADING CAREER TRAJECTORY...</p>
+                </div>
+
+                <div class="relative border-l-2 border-cyber-purple/30 ml-4 md:ml-0 md:pl-0 space-y-12">
+                    
+                    <!-- Job 1 -->
+                    <div class="relative md:ml-6 pl-8 md:pl-10">
+                        <!-- Node indicator -->
+                        <div class="absolute -left-2 md:-left-[5px] top-0 w-4 h-4 rounded-full bg-cyber-bg border-2 border-cyber-cyan shadow-[0_0_10px_#00F5FF]"></div>
+                        
+                        <div class="glass-panel p-6 md:p-8 rounded-tr-2xl rounded-bl-2xl border-t-2 border-cyber-cyan transition-transform hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(0,245,255,0.15)]">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+                                <div>
+                                    <h3 class="font-header text-2xl font-bold text-white">Senior Associate</h3>
+                                    <h4 class="font-mono text-cyber-cyan text-lg">WNS Global Services</h4>
+                                </div>
+                                <div class="font-mono text-xs bg-cyber-cyan/10 text-cyber-cyan px-3 py-1 rounded border border-cyber-cyan/30 mt-2 md:mt-0 inline-block w-max">
+                                    AUG 2021 — MAR 2024
+                                </div>
+                            </div>
+                            
+                            <p class="font-body text-gray-300 text-sm mb-4 border-b border-gray-800 pb-4">
+                                Deployed into US Healthcare networks specializing in high-volume Indexing, Splitting, and Labeling (ISL) data pipelines.
+                            </p>
+                            
+                            <ul class="space-y-3 font-body text-gray-400 text-sm">
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-cyan mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Supported AIS 1st Party client systems by ensuring accurate document classification and data handling.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-cyan mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Maintained continuous high-quality standards while consistently meeting productivity targets.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-cyan mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Collaborated effectively with team members to identify, analyze, and resolve complex operational issues.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-cyan mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Ensured compliance with client requirements and organizational quality guidelines.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Job 2 -->
+                    <div class="relative md:ml-6 pl-8 md:pl-10">
+                        <div class="absolute -left-2 md:-left-[5px] top-0 w-4 h-4 rounded-full bg-cyber-bg border-2 border-cyber-pink shadow-[0_0_10px_#FF2D95]"></div>
+                        
+                        <div class="glass-panel p-6 md:p-8 rounded-tr-2xl rounded-bl-2xl border-t-2 border-cyber-pink transition-transform hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(255,45,149,0.15)]">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+                                <div>
+                                    <h3 class="font-header text-2xl font-bold text-white">Intern - Human Capital</h3>
+                                    <h4 class="font-mono text-cyber-pink text-lg">Brandix Apparel Ltd. | Visakhapatnam</h4>
+                                </div>
+                                <div class="font-mono text-xs bg-cyber-pink/10 text-cyber-pink px-3 py-1 rounded border border-cyber-pink/30 mt-2 md:mt-0 inline-block w-max">
+                                    APR 2019 — SEP 2019
+                                </div>
+                            </div>
+                            
+                            <p class="font-body text-gray-300 text-sm mb-4 border-b border-gray-800 pb-4">
+                                Project Designation: Employee Welfare Management & Satisfaction Metrics.
+                            </p>
+                            
+                            <ul class="space-y-3 font-body text-gray-400 text-sm">
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-pink mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Conducted studies to assess employee satisfaction with welfare and safety measures implemented by the organization.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-pink mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Evaluated the effectiveness of employee welfare programs and their impact on overall job satisfaction and well-being.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-pink mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Collected and interpreted employee feedback to identify areas for improvement in welfare and security practices.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="ph-fill ph-caret-right text-cyber-pink mt-1 mr-2 flex-shrink-0"></i>
+                                    <span>Prepared reports and presented findings with recommendations to enhance employee engagement and organizational effectiveness.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div class="relative md:ml-6 pl-8 md:pl-10">
+                        <div class="absolute -left-2 md:-left-[5px] top-0 w-4 h-4 rounded-full bg-cyber-bg border-2 border-cyber-purple shadow-[0_0_10px_#B026FF]"></div>
+                        
+                        <div class="glass-panel p-6 rounded-lg border border-cyber-purple/30 bg-cyber-purple/5">
+                            <h3 class="font-mono text-sm text-cyber-purple uppercase mb-2">Knowledge Archive</h3>
+                            <h4 class="font-header text-xl font-bold">Bachelor of Business Administration (BBA)</h4>
+                            <p class="font-body text-gray-400">M.V.R Degree College // Base Protocol Established: 2020</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 05: Contact Terminal -->
+        <section id="contact" class="py-24 relative px-4 border-t border-cyber-lime/10">
+            <div class="max-w-4xl mx-auto text-center">
+                <i class="ph ph-broadcast text-5xl text-cyber-lime mb-4 animate-pulse"></i>
+                <h2 class="font-header text-4xl font-bold uppercase tracking-wider text-white mb-6">Comm_Link <span class="text-cyber-lime">Terminal</span></h2>
+                <p class="font-mono text-gray-400 mb-12 max-w-lg mx-auto">Ready to initialize new protocols. Open a secure channel to transmit opportunities.</p>
+                
+                <div class="glass-panel max-w-2xl mx-auto p-8 border-t-4 border-t-cyber-lime text-left relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-cyber-lime opacity-5 rounded-full blur-3xl"></div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                        <!-- Datapoints -->
+                        <div class="space-y-6">
+                            <div>
+                                <div class="font-mono text-xs text-cyber-lime mb-1 uppercase">Transmission Node</div>
+                                <div class="font-header text-lg flex items-center group cursor-none">
+                                    <i class="ph ph-envelope-simple text-cyber-lime mr-3 group-hover:animate-bounce"></i>
+                                    <a href="mailto:thotakuravasanthkumar63895@gmail.com" class="hover:text-cyber-lime transition-colors break-all">thotakuravasanthkumar63895<br>@gmail.com</a>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-mono text-xs text-cyber-lime mb-1 uppercase">Voice Frequency</div>
+                                <div class="font-header text-lg flex items-center group cursor-none">
+                                    <i class="ph ph-phone text-cyber-lime mr-3 group-hover:animate-bounce"></i>
+                                    <a href="tel:+918688899723" class="hover:text-cyber-lime transition-colors">+91 868 889 9723</a>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-mono text-xs text-cyber-lime mb-1 uppercase">Location Coordinates</div>
+                                <div class="font-header text-lg flex items-center">
+                                    <i class="ph ph-map-pin text-cyber-lime mr-3"></i>
+                                    <span>India (Sector 91)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interface form simulation -->
+                        <div class="border border-gray-800 p-4 rounded bg-black/40 font-mono text-sm flex flex-col justify-between">
+                            <div>
+                                <div class="text-cyber-cyan mb-2">> PING REQUEST ...</div>
+                                <div class="text-gray-500 mb-4">> AWAITING HANDSHAKE ...</div>
+                                
+                                <input type="text" placeholder="YOUR_ID" class="w-full bg-transparent border-b border-gray-700 text-white focus:outline-none focus:border-cyber-lime py-2 mb-4 placeholder-gray-600 transition-colors cursor-none">
+                                <textarea placeholder="ENTER_MESSAGE_DATA" rows="3" class="w-full bg-transparent border-b border-gray-700 text-white focus:outline-none focus:border-cyber-lime py-2 placeholder-gray-600 transition-colors resize-none cursor-none"></textarea>
+                            </div>
+                            
+                            <button class="cyber-btn w-full py-2 mt-4 text-xs font-bold border-cyber-lime text-cyber-lime hover:bg-cyber-lime/10 cursor-none" onclick="simulateTransmission()">
+                                Transmit Data
+                            </button>
+                            <div id="tx-status" class="hidden text-xs text-center mt-2 text-cyber-lime animate-pulse">TRANSMISSION SENT successfully.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-8 text-center border-t border-gray-900 bg-black">
+            <p class="font-mono text-xs text-gray-600">
+                &copy; 2099 V-KUMAR OS v3.1. All systems operational.<br>
+                Declaration: Verified telemetry data. True and correct per system knowledge base.
+            </p>
+        </footer>
+
+    </main>
+
+    <script>
+        // 1. Custom Cursor Logic
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorOutline = document.getElementById('cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Adding slight delay for the outline for a fluid effect
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 150, fill: "forwards" });
+        });
+
+        // Add hover effects to interactables
+        const interactables = document.querySelectorAll('a, button, .tech-node');
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorOutline.style.width = '60px';
+                cursorOutline.style.height = '60px';
+                cursorOutline.style.borderColor = 'var(--cyan)';
+                cursorOutline.style.boxShadow = 'inset 0 0 15px rgba(0, 245, 255, 0.5)';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOutline.style.width = '40px';
+                cursorOutline.style.height = '40px';
+                cursorOutline.style.borderColor = 'var(--purple)';
+                cursorOutline.style.boxShadow = 'inset 0 0 10px rgba(176, 38, 255, 0.5)';
+            });
+        });
+
+        // 2. Typewriter Effect Logic
+        const words = ["Healthcare Associate", "Data Operations Specialist", "ISL Expert", "Human Capital Analyst"];
+        let i = 0;
+        let timer;
+        let isDeleting = false;
+        let txt = '';
+        const speed = 100;
+        const waitTime = 2000;
+
+        function typeWriter() {
+            const currentWord = words[i % words.length];
+            
+            if (isDeleting) {
+                txt = currentWord.substring(0, txt.length - 1);
+            } else {
+                txt = currentWord.substring(0, txt.length + 1);
+            }
+
+            document.getElementById("typewriter").innerHTML = txt;
+
+            let typeSpeed = speed;
+            if (isDeleting) { typeSpeed /= 2; }
+
+            if (!isDeleting && txt === currentWord) {
+                typeSpeed = waitTime;
+                isDeleting = true;
+            } else if (isDeleting && txt === '') {
+                isDeleting = false;
+                i++;
+                typeSpeed = 500;
+            }
+
+            setTimeout(typeWriter, typeSpeed);
+        }
+        
+        // 3. Canvas Background Matrix/Network Effect
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 1.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > w) this.vx *= -1;
+                if (this.y < 0 || this.y > h) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 245, 255, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        function initCanvas() {
+            particles = [];
+            let numParticles = window.innerWidth > 768 ? 80 : 40; // Adjust for mobile
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, w, h);
+            
+            // Update & Draw Particles
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                // Draw Connections
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 245, 255, ${0.2 - dist/600})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+
+        // 4. Chart.js Skills Radar Chart
+        function initChart() {
+            const ctxChart = document.getElementById('skillsRadar').getContext('2d');
+            
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+            Chart.defaults.font.family = "'Share Tech Mono', monospace";
+            
+            new Chart(ctxChart, {
+                type: 'radar',
+                data: {
+                    labels: ['ISL Ops', 'Data Parsing', 'HR Protocols', 'Comm Interface', 'Team Sync', 'Time Synth'],
+                    datasets: [{
+                        label: 'Core Competency',
+                        data: [98, 90, 85, 92, 88, 95],
+                        backgroundColor: 'rgba(0, 245, 255, 0.2)',
+                        borderColor: '#00F5FF',
+                        pointBackgroundColor: '#B026FF',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#B026FF',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: {
+                                font: { size: window.innerWidth < 768 ? 10 : 12 },
+                                color: '#00F5FF'
+                            },
+                            ticks: { display: false, min: 0, max: 100 }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // 5. Contact Form Simulation (No alert())
+        function simulateTransmission() {
+            const btn = document.querySelector('button[onclick="simulateTransmission()"]');
+            const statusBox = document.getElementById('tx-status');
+            
+            btn.innerText = "UPLOADING...";
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            
+            setTimeout(() => {
+                btn.innerText = "TRANSMIT DATA";
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                statusBox.classList.remove('hidden');
+                
+                // clear after 3 seconds
+                setTimeout(() => {
+                    statusBox.classList.add('hidden');
+                }, 3000);
+            }, 1500);
+        }
+
+        window.onload = function() {
+            typeWriter();
+            initCanvas();
+            animateCanvas();
+            initChart();
+            
+            // Clean fade in effect
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 1.5s ease';
+                document.body.style.opacity = 1;
+            }, 100);
+        };
+    </script>
+</body>
+</html>
